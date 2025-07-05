@@ -125,7 +125,7 @@ class Interpreter:
                 "variable_name": var_name,
                 "question": question
             }
-            self.lib.dom.print_to_output(f"// [Oráculo]: Aguardando input para '{var_name}' (Pergunta: '{question}').")
+            self.lib.dom.print_to_to_output(f"// [Oráculo]: Aguardando input para '{var_name}' (Pergunta: '{question}').")
             # A execução será retomada no método 'run' quando o input for submetido
 
         elif command == "ai.craftHtml": # Novo comando para AI
