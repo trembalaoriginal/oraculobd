@@ -1,58 +1,82 @@
-// backend/searchEngine.js
-const Fuse = require('fuse.js');
+// backend/server.js
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const codeLibraries = require('./codeLibrary'); // Sua biblioteca de código
+const searchEngine = require('./searchEngine'); // Seu motor de busca aprimorado
 
-let searchIndex = []; // O índice que será preenchido
-let fuse; // Instância do Fuse.js
+const app = express();
+const PORT = process.env.PORT || 3001;
 
-function initializeSearchIndex(codeLibraries) {
-  searchIndex = [];
-  Object.keys(codeLibraries).forEach(lang => {
-    if (Array.isArray(codeLibraries[lang])) { // Garante que é um array de snippets
-      codeLibraries[lang].forEach(snippet => {
-        searchIndex.push({
-          ...snippet,
-          language: lang, // Adiciona a linguagem para categorização
-          // Combina palavras-chave e descrição para o texto pesquisável
-          searchableText: `${lang} ${snippet.keywords.join(' ')} ${snippet.description}`.toLowerCase()
-        });
-      });
+// Configuração CORS (garanta que a URL do seu frontend esteja correta)
+const allowedOrigins = [
+  'https://oraculofd-1.onrender.com', // Frontend Render
+  'http://localhost:5173',          // Frontend local (Vite padrão)
+  'http://localhost:3000'           // Frontend local (Outro)
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política de CORS para este site não permite acesso a partir da origem especificada.';
+      return callback(new Error(msg), false);
     }
-  });
-
-  const fuseOptions = {
-    keys: [
-      { name: 'searchableText', weight: 0.8 }, // Principal campo de busca
-      { name: 'language', weight: 0.5 },    // Importância da linguagem
-      { name: 'description', weight: 0.3 }   // Descrição também ajuda
-    ],
-    threshold: 0.3, // Quão "difusa" a correspondência deve ser (0 = exato, 1 = qualquer coisa)
-    ignoreLocation: true,
-    includeScore: true, // Inclui a pontuação de relevância
-    includeMatches: true, // Inclui onde a correspondência ocorreu
-    shouldSort: true // Ordenar resultados por relevância
-  };
-
-  fuse = new Fuse(searchIndex, fuseOptions);
-  console.log(`Motor de busca inicializado com ${searchIndex.length} snippets.`);
-}
-
-function search(query, limit = 5) {
-  if (!fuse) {
-    console.error("Motor de busca não inicializado!");
-    return [];
+    return callback(null, true);
   }
-  const results = fuse.search(query);
-  // Opcional: Adicionar um peso extra baseado no 'weight' do snippet
-  const weightedResults = results.map(result => ({
-    ...result.item,
-    score: result.score * (1 - (result.item.weight || 0) / 100) // Quanto menor o score, melhor. Inverte o weight.
-                                                             // Ou simplesmente adicione um valor ao score: result.score + (1 - (result.item.weight || 0) / 10)
-  })).sort((a, b) => a.score - b.score); // Reordenar pelo novo score ponderado
+}));
 
-  return weightedResults.slice(0, limit); // Retorna os N melhores resultados
-}
+app.use(bodyParser.json());
 
-module.exports = {
-  initializeSearchIndex,
-  search
-};
+// **Inicializa o motor de busca na inicialização do servidor**
+// Isso é crucial para o desempenho: o índice é construído uma vez.
+searchEngine.initializeSearchIndex(codeLibraries);
+
+app.get("/", (req, res) => {
+  res.send("Oráculo Backend está online! Use a rota /execute para comandos.");
+});
+
+// Rota única para lidar com todos os comandos do frontend
+app.post("/execute", async (req, res) => {
+  const { command } = req.body;
+
+  if (!command || !command.trim()) {
+    return res.status(400).json({ error: "Comando não fornecido." });
+  }
+
+  // Realiza a busca usando o motor otimizado
+  const results = searchEngine.search(command, 3); // Pega os 3 melhores resultados
+  const suggestions = searchEngine.generateSuggestions(results, 3); // Gera 3 sugestões baseadas nos resultados
+
+  if (results.length > 0) {
+    // Formata a saída para o frontend
+    let formattedResponse = results.map(r =>
+      `Linguagem: ${r.language.toUpperCase()}\n` +
+      `Descrição: ${r.description}\n` +
+      `\`\`\`${r.language === 'javascript' ? 'js' : r.language}\n${r.code}\n\`\`\`\n`
+    ).join('---\n'); // Separador entre múltiplos resultados
+
+    if (suggestions.length > 0) {
+        formattedResponse += `\n\n--- Sugestões ---\n` +
+                             suggestions.map(s => `> ${s}`).join('\n');
+    }
+
+    res.json({ result: formattedResponse });
+  } else {
+    // Se não encontrar nada, tenta uma busca mais genérica para sugestões
+    const fallbackSuggestions = searchEngine.generateSuggestions(
+        searchEngine.search("common code", 5), // Busca por termos comuns
+        3
+    );
+    let noResultMsg = `Desculpe, não encontrei nenhum snippet de código para "${command}".`;
+    if (fallbackSuggestions.length > 0) {
+        noResultMsg += `\n\n--- Sugestões --- \n` +
+                       fallbackSuggestions.map(s => `> ${s}`).join('\n');
+    }
+    res.json({ result: noResultMsg });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor Oráculo Backend rodando na porta ${PORT}`);
+});
