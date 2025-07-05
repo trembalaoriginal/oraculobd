@@ -140,7 +140,7 @@ class OraculoLib:
             A 'prompt' deve instruir o LLM sobre o que gerar (ex: código HTML).
             """
             if not self._gemini_api_key:
-                return ""
+                return "" # **ALTERADO/VERIFICAR**
 
             self._output_buffer.append(f"[AI.generate_content]: Enviando prompt ao LLM: '{prompt[:80]}...'")
             
@@ -171,10 +171,10 @@ class OraculoLib:
                 return generated_text
             except ImportError:
                 self._output_buffer.append("// ERRO: google-generativeai não instalado. Execute 'pip install google-generativeai'")
-                return ""
+                return "" # **ALTERADO/VERIFICAR**
             except Exception as e:
                 self._output_buffer.append(f"// ERRO ao chamar LLM: {e}")
-                return f""
+                return f"" # **ALTERADO/VERIFICAR**
 
     class _Storage:
         def __init__(self, output_buffer):
