@@ -2,16 +2,14 @@
   "name": "oraculo-backend",
   "version": "1.0.0",
   "description": "Backend Node.js para o Oráculo",
-  "main": "server.js", // Garanta que 'server.js' é o arquivo principal
+  "main": "server.js", 
   "scripts": {
-    "start": "node server.js", // Definir um script de start
+    "start": "node server.js", 
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    // Adicione as dependências do seu backend Node.js aqui
-    // Exemplo: "express": "^4.18.2"
   }
 }
