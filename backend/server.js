@@ -1,49 +1,39 @@
-const express = require('express');
-const cors = require('cors');
-const { html, python, javascript, css } = require('./codeLibrary');
+// backend/server.js (adaptado)
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const codeLibraries = require('./codeLibrary'); // Sua biblioteca de código
+const searchEngine = require('./searchEngine'); // Seu novo motor de busca
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
-app.use(express.json());
+// ... (configuração CORS, bodyParser) ...
 
-// sanity check
-app.get('/', (req, res) => res.send('Oráculo offline rodando!'));
+// **Inicializa o motor de busca na inicialização do servidor**
+searchEngine.initializeSearchIndex(codeLibraries);
 
-app.post('/', (req, res) => {
-  const { command } = req.body;
-  if (!command) {
-    return res.status(400).json({ error: 'O comando é obrigatório.' });
+
+app.post("/execute", async (req, res) => {
+  const { command } = req.body; // O comando completo vindo do frontend
+
+  if (!command || !command.trim()) {
+    return res.status(400).json({ error: "Comando não fornecido." });
   }
 
-  // separa: primeira palavra = linguagem, resto = descrição
-  const [langRaw, ...rest] = command.trim().split(/\s+/);
-  const lang = langRaw.toLowerCase();
-  const desc = rest.join(' ');
+  // A busca agora é mais flexível: o comando completo é a query.
+  const results = searchEngine.search(command, 3); // Retorna os 3 melhores resultados
 
-  let snippet;
-  switch (lang) {
-    case 'html':
-      snippet = html(desc);
-      break;
-    case 'python':
-      snippet = python(desc);
-      break;
-    case 'javascript':
-    case 'js':
-      snippet = javascript(desc);
-      break;
-    case 'css':
-      snippet = css(desc);
-      break;
-    default:
-      snippet = `// Linguagem "${lang}" não suportada.`;
+  if (results.length > 0) {
+    // Retornar múltiplos resultados com descrições
+    const formattedResults = results.map(r =>
+      `Linguagem: ${r.language.toUpperCase()}\nDescrição: ${r.description}\n\`\`\`${r.language}\n${r.code}\n\`\`\`\n`
+    ).join('---\n'); // Separar múltiplos resultados
+
+    res.json({ result: formattedResults });
+  } else {
+    res.json({ result: `Desculpe, não encontrei nenhum snippet de código para "${command}". Tente uma descrição diferente.` });
   }
-
-  return res.json({ result: snippet });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Oráculo offline escutando em http://localhost:${PORT}`);
-});
+// ... (app.get("/") e app.listen(PORT)) ...
