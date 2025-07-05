@@ -8,43 +8,38 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// GET só para teste
+// GET / — rota de sanity check
 app.get('/', (req, res) => {
-  res.send('Oráculo backend rodando. Use POST / para enviar comandos.');
+  res.send('🔮 Oráculo IA backend rodando.');
 });
 
-// POST /
+// POST / — recebe { command } e devolve { result }
 app.post('/', async (req, res) => {
   const { command } = req.body;
-
   if (!command) {
     return res.status(400).json({ error: 'O comando é obrigatório.' });
   }
 
   try {
-    const geminiApiKey = process.env.GEMINI_API_KEY || 'SUA_API_KEY';
-    const geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    const apiKey = process.env.GEMINI_API_KEY; // Defina no painel do Render
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
-    const geminiResponse = await axios.post(
-      `${geminiEndpoint}?key=${geminiApiKey}`,
-      {
-        contents: [
-          {
-            parts: [{ text: command }]
-          }
-        ]
-      }
+    const { data } = await axios.post(
+      `${endpoint}?key=${apiKey}`,
+      { contents: [{ parts: [{ text: command }] }] }
     );
 
-    const respostaGemini = geminiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
+    const result =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      'Não consegui gerar resposta.';
 
-    res.json({ result: respostaGemini });
-  } catch (error) {
-    console.error('Erro na API do Gemini:', error.message);
-    res.status(500).json({ error: 'Erro ao processar o comando.' });
+    res.json({ result });
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: 'Falha ao chamar a API de IA.' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`🚀 Backend escutando em http://localhost:${PORT}`);
 });
