@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-google-generativeai
-pydantic
-# **OPCIONAL/VERIFICAR: Adicione quaisquer outras dependências que o 'pip freeze' possa ter listado**
-# Ex: starlette (se FastAPI precisar de uma versão específica), typing_extensions, etc.
