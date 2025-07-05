@@ -21,7 +21,7 @@ app.post("/execute", async (req, res) => {
   }
 
   try {
-    const geminiApiKey = process.env.GEMINI_API_KEY; // configure no Render
+    const geminiApiKey = process.env.GEMINI_API_KEY; // Configure no Render
     const geminiEndpoint =
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
 
@@ -43,4 +43,10 @@ app.post("/execute", async (req, res) => {
     res.json({ result });
   } catch (err) {
     console.error(err.response?.data || err.message);
-    res.status(500)
+    res.status(500).json({ error: "Erro ao chamar Gemini" });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor backend rodando na porta ${PORT}`);
+});
