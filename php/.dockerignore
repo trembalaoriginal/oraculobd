@@ -1,0 +1,5 @@
+.git
+.gitignore
+.env
+node_modules/ # Se você tiver algum node_modules por perto por engano
+vendor/       # O Composer irá instalar as dependências dentro do container
