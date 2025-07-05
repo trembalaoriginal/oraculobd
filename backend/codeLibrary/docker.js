@@ -133,10 +133,10 @@ docker run -d --name meu-db -v meu-volume-dados:/var/lib/mysql mysql:latest
 
 # Usando Bind Mounts (para mapear diretórios do host para o container, ideal para desenvolvimento)
 # Mapeia o diretório atual do host para /app no container:
-docker run -d --name meu-app -p 3000:3000 -v $(pwd):/app meu-imagem-node:latest
+docker run -d --name meu-app -p 3000:3000 -v $(process.env.PWD):/app meu-imagem-node:latest
 
 # No Windows (PowerShell):
-# docker run -d --name meu-app -p 3000:3000 -v ${PWD}:/app meu-imagem-node:latest
+# docker run -d --name meu-app -p 3000:3000 -v ${process.env.PWD}:/app meu-imagem-node:latest
 
 # No Docker Compose (veja o exemplo docker-compose-basic)`,
     weight: 7,
