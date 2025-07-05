@@ -19,7 +19,7 @@ const allowedOrigins = [
     "http://localhost:3000", // Outra porta comum para frontend local
     // **COLE AQUI A URL DO SEU FRONTEND DEPLOYADO NO RENDER**
     // Exemplo: "https://oraculofd-1.onrender.com"
-    "*" // **ATENÇÃO: Este '*' deve ser substituído pela URL do seu frontend em produção!**
+    "https://oraculofd-1.onrender.com/" // **ATENÇÃO: Este '*' deve ser substituído pela URL do seu frontend em produção!**
 ];
 
 app.use(cors({
@@ -38,7 +38,7 @@ app.use(bodyParser.json());
 // Configure sua chave API Gemini aqui.
 // Em produção no Render, ela será carregada da variável de ambiente GEMINI_API_KEY.
 // Localmente, ela será carregada do .env ou você pode colar aqui para testes rápidos.
-const API_KEY = process.env.GEMINI_API_KEY || "SUA_API_KEY_GEMINI_AQUI"; // **ALTERAR AQUI PARA SUA CHAVE OU GARANTIR VARIÁVEL DE AMBIENTE**
+const API_KEY = process.env.GEMINI_API_KEY || "AIzaSyByTWi-FyD-YDoNkDlSDvuEMA8HM5FV2_E"; // **ALTERAR AQUI PARA SUA CHAVE OU GARANTIR VARIÁVEL DE AMBIENTE**
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Rota única para lidar com todos os comandos do frontend
