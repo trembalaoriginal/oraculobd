@@ -17,7 +17,7 @@ app = FastAPI(
 # Configuração do CORS
 # Para desenvolvimento, '*' permite qualquer origem.
 # Para produção, substitua '*' pelo URL do seu frontend deployado (ex: "https://seu-frontend.onrender.com")
-origins = ["**"] # **VERIFICAR/ALTERAR: Para produção, altere "*" para o URL do seu frontend deployado (ex: ["https://oraculofd-frontend.onrender.com"])**
+origins = ["https://oraculofd-1.onrender.com"] # **VERIFICAR/ALTERAR: Para produção, altere "*" para o URL do seu frontend deployado (ex: ["https://oraculofd-frontend.onrender.com"])**
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
