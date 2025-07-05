@@ -30,9 +30,9 @@ app.post("/execute", async (req, res) => {
       {
         contents: [
           {
-            parts: [{ text: command }],
-          },
-        ],
+            parts: [{ text: command }]
+          }
+        ]
       }
     );
 
@@ -43,9 +43,4 @@ app.post("/execute", async (req, res) => {
     res.json({ result });
   } catch (err) {
     console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Erro ao chamar Gemini" });
-  }
-});
-
-app.listen(PORT, () => {
-  co
+    res.status(500)
