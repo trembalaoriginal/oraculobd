@@ -8,13 +8,13 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Rota de teste opcional
+// GET só para teste
 app.get('/', (req, res) => {
-  res.send('Oráculo backend rodando.');
+  res.send('Oráculo backend rodando. Use POST / para enviar comandos.');
 });
 
-// Rota /execute
-app.post('/execute', async (req, res) => {
+// POST /
+app.post('/', async (req, res) => {
   const { command } = req.body;
 
   if (!command) {
@@ -22,7 +22,6 @@ app.post('/execute', async (req, res) => {
   }
 
   try {
-    // Chama a API do Gemini ou GPT aqui
     const geminiApiKey = process.env.GEMINI_API_KEY || 'SUA_API_KEY';
     const geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
@@ -46,7 +45,6 @@ app.post('/execute', async (req, res) => {
   }
 });
 
-// Inicia servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
