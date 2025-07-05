@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const dotenv = require('dotenv'); // Para carregar variáveis de ambiente localmente
+const dotenv = require('dotenv');
 
 // Carrega variáveis de ambiente do arquivo .env (apenas para desenvolvimento local)
 dotenv.config();
@@ -12,14 +12,12 @@ const app = express();
 const PORT = process.env.PORT || 3001; // Usa a porta do ambiente (Render) ou 3001 localmente
 
 // Configuração CORS - MUITO IMPORTANTE!
-// **AQUI VOCÊ PRECISARÁ DA URL DO SEU FRONTEND DEPLOYADO NO RENDER**
-// Por enquanto, para testes locais e deploy inicial, usaremos '*', mas depois você vai ALTERAR.
+// **COLE AQUI A URL DO SEU FRONTEND DEPLOYADO NO RENDER**
+// Pela última imagem, a URL é https://oraculofd-1.onrender.com
 const allowedOrigins = [
     "http://localhost:5173", // Para desenvolvimento local do frontend
     "http://localhost:3000", // Outra porta comum para frontend local
-    // **COLE AQUI A URL DO SEU FRONTEND DEPLOYADO NO RENDER**
-    // Exemplo: "https://oraculofd-1.onrender.com"
-    "https://oraculofd-1.onrender.com/" // **ATENÇÃO: Este '*' deve ser substituído pela URL do seu frontend em produção!**
+    "https://oraculofd-1.onrender.com" // <--- SUA URL EXATA DO FRONTEND AQUI!
 ];
 
 app.use(cors({
@@ -31,14 +29,21 @@ app.use(cors({
             return callback(new Error(msg), false);
         }
         return callback(null, true);
-    }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Adicione todos os métodos que você usa
+    allowedHeaders: ["Content-Type", "Authorization"], // Adicione todos os cabeçalhos que você usa
+    credentials: true // Permite que o navegador inclua cookies e cabeçalhos de autorização
 }));
 app.use(bodyParser.json());
 
 // Configure sua chave API Gemini aqui.
 // Em produção no Render, ela será carregada da variável de ambiente GEMINI_API_KEY.
-// Localmente, ela será carregada do .env ou você pode colar aqui para testes rápidos.
-const API_KEY = process.env.GEMINI_API_KEY || "AIzaSyByTWi-FyD-YDoNkDlSDvuEMA8HM5FV2_E"; // **ALTERAR AQUI PARA SUA CHAVE OU GARANTIR VARIÁVEL DE AMBIENTE**
+// Localmente, ela será carregada do .env.
+const API_KEY = process.env.GEMINI_API_KEY; // Apenas pega do ambiente
+if (!API_KEY) {
+    console.error("ERRO: Variável de ambiente GEMINI_API_KEY não configurada.");
+    process.exit(1); // Sai do processo se a chave não estiver configurada
+}
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Rota única para lidar com todos os comandos do frontend
@@ -50,20 +55,21 @@ app.post("/execute", async (req, res) => {
   }
 
   let promptText = "";
-  let resultType = "text"; // Para indicar o tipo de resposta
+  let resultKey = "result"; // Chave padrão para a resposta
 
   if (command.startsWith("exec ")) {
     // Comando 'exec' (execução de Python) não é suportado por este backend Node.js
     return res.json({ result: "O comando 'exec' (execução de código Python) não é suportado por este backend Node.js. Por favor, use 'ask' ou 'html'." });
   } else if (command.startsWith("ask ")) {
     promptText = `Responda à pergunta: ${command.substring(4)}`;
-    resultType = "answer";
+    resultKey = "answer";
   } else if (command.startsWith("html ")) {
     promptText = `Gere apenas o código HTML para a seguinte requisição. Não inclua markdown, explicações, ou qualquer texto extra, apenas o HTML puro. Requisicao: ${command.substring(5)}`;
-    resultType = "html_code";
+    resultKey = "html_code";
   } else {
     // Comportamento padrão se nenhum prefixo conhecido for encontrado
     promptText = `Crie o código para: ${command}`;
+    resultKey = "result";
   }
 
   try {
@@ -72,18 +78,20 @@ app.post("/execute", async (req, res) => {
     const response = await result.response;
     const text = response.text();
 
-    // Retorna a resposta com base no tipo de resultado esperado
-    if (resultType === "answer") {
-        res.json({ answer: text });
-    } else if (resultType === "html_code") {
-        res.json({ html_code: text });
-    } else {
-        res.json({ result: text });
-    }
+    const responseBody = {};
+    responseBody[resultKey] = text;
+    res.json(responseBody);
 
   } catch (err) {
     console.error("Erro ao processar comando Gemini:", err);
-    res.status(500).json({ error: "Erro ao processar comando com a IA. Verifique os logs do backend." });
+    // Erros da API Gemini podem ter detalhes no `err.message`
+    let errorMessage = "Erro ao processar comando com a IA.";
+    if (err.message && err.message.includes("API key not valid")) {
+        errorMessage = "Erro de autenticação da API Gemini. Verifique sua chave API.";
+    } else if (err.message) {
+        errorMessage += ` Detalhes: ${err.message}`;
+    }
+    res.status(500).json({ error: errorMessage });
   }
 });
 
