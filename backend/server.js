@@ -1,31 +1,32 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const axios = require("axios");
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("✅ Oráculo IA backend rodando!");
+// Rota de teste opcional
+app.get('/', (req, res) => {
+  res.send('Oráculo backend rodando.');
 });
 
-app.post("/execute", async (req, res) => {
+// Rota /execute
+app.post('/execute', async (req, res) => {
   const { command } = req.body;
 
   if (!command) {
-    return res.status(400).json({ error: "Nenhum comando enviado" });
+    return res.status(400).json({ error: 'O comando é obrigatório.' });
   }
 
   try {
-    const geminiApiKey = process.env.GEMINI_API_KEY; // Configure no Render
-    const geminiEndpoint =
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    // Chama a API do Gemini ou GPT aqui
+    const geminiApiKey = process.env.GEMINI_API_KEY || 'SUA_API_KEY';
+    const geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
-    const response = await axios.post(
+    const geminiResponse = await axios.post(
       `${geminiEndpoint}?key=${geminiApiKey}`,
       {
         contents: [
@@ -36,17 +37,16 @@ app.post("/execute", async (req, res) => {
       }
     );
 
-    const result =
-      response.data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Nenhuma resposta gerada.";
+    const respostaGemini = geminiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
 
-    res.json({ result });
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Erro ao chamar Gemini" });
+    res.json({ result: respostaGemini });
+  } catch (error) {
+    console.error('Erro na API do Gemini:', error.message);
+    res.status(500).json({ error: 'Erro ao processar o comando.' });
   }
 });
 
+// Inicia servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor backend rodando na porta ${PORT}`);
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
