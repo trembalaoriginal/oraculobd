@@ -12,12 +12,12 @@ const app = express();
 const PORT = process.env.PORT || 3001; // Usa a porta do ambiente (Render) ou 3001 localmente
 
 // Configuração CORS - MUITO IMPORTANTE!
-// **COLE AQUI A URL DO SEU FRONTEND DEPLOYADO NO RENDER**
+// **A URL do seu frontend deployado no Render precisa estar AQUI!**
 // Pela última imagem, a URL é https://oraculofd-1.onrender.com
 const allowedOrigins = [
     "http://localhost:5173", // Para desenvolvimento local do frontend
     "http://localhost:3000", // Outra porta comum para frontend local
-    "https://oraculofd-1.onrender.com" // <--- SUA URL EXATA DO FRONTEND AQUI!
+    "https://oraculofd-1.onrender.com" // <-- SUA URL EXATA DO FRONTEND AQUI!
 ];
 
 app.use(cors({
