@@ -15,7 +15,9 @@ app = FastAPI(
 )
 
 # Configuração do CORS
-origins = ["*"] # Mantenha "*" para desenvolvimento, restrinja para produção.
+# Para desenvolvimento, '*' permite qualquer origem.
+# Para produção, substitua '*' pelo URL do seu frontend deployado (ex: "https://seu-frontend.onrender.com")
+origins = ["**"] # **VERIFICAR/ALTERAR: Para produção, altere "*" para o URL do seu frontend deployado (ex: ["https://oraculofd-frontend.onrender.com"])**
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -32,7 +34,7 @@ class CodeExecutionRequest(BaseModel):
     code: str
     session_id: str = None # Pode vir nulo para uma nova sessão
 
-class UserInputRequest(Base BaseModel):
+class UserInputRequest(BaseModel): # Corrigido para herdar de BaseModel
     session_id: str
     variable_name: str
     input_value: str
@@ -173,4 +175,6 @@ async def read_root():
 
 if __name__ == "__main__":
     import uvicorn
+    # **VERIFICAR: Porta 8000 é para desenvolvimento local. No Render, a porta é injetada por variável de ambiente.**
+    # O comando de start do Render (uvicorn app:app --host 0.0.0.0 --port $PORT) já cuida disso.
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
